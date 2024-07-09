@@ -208,7 +208,7 @@ def online_car_parts(driver, file_path):
     # }
 
     desired_brands = {
-        "ALFA ROMEO"
+        "ABARTH", "LAMBORGHINI"
     }
 
     # Pronalaženje svih opcija unutar alphabetical_optgroup elementa
@@ -266,12 +266,31 @@ def online_car_parts(driver, file_path):
                                     if option_engine.get_attribute('value') != "-1":
                                         engine_name = option_engine.text
                                         print(f"{brand_name} - {model_name} - {series_name} - {engine_name}")
-                                        option_engine.click()
+
+                                        try:
+                                            option_engine.click()
+                                        except ElementClickInterceptedException:
+                                            accept_cookies(driver)
+                                            sleep(1)
+                                            option_engine.click()
+                                        except Exception as e:
+                                            print(f"An error occurred while clicking option_engine click button: {e}")
                                         # Dodavanje podataka u Excel fajl
                                         # append_to_excel(file_path, [brand_name, model_name, series_name, engine_name])
-                                        search_button = main_div.find_element(By.XPATH,
-                                                                              './/button[@type="button" and contains(text(), "Search")]')
-                                        search_button.click()
+
+                                        try:
+                                            search_button = main_div.find_element(By.XPATH,
+                                                                                  './/button[@type="button" and contains(text(), "Search")]')
+                                            search_button.click()
+                                        except ElementClickInterceptedException:
+                                            accept_cookies(driver)
+                                            sleep(1)
+                                            search_button = main_div.find_element(By.XPATH,
+                                                                                  './/button[@type="button" and contains(text(), "Search")]')
+                                            search_button.click()
+                                        except Exception as e:
+                                            print(f"An error occurred while clicking search button: {e}")
+
                                         current_url = driver.current_url
                                         wait_for_url_change(driver, current_url)
 
@@ -385,6 +404,8 @@ def online_car_parts(driver, file_path):
                                                         oil_filter_brand_name = "Unknown"
                                                         print("- [404] Filter brand not found.")
 
+                                                    ul_element = None
+
                                                     # filter type
                                                     try:
                                                         desc_table_div = WebDriverWait(product_main_div, 10).until(
@@ -426,205 +447,209 @@ def online_car_parts(driver, file_path):
                                                     #                                                './/div[@class="product-card__desc-table "]')
                                                     # ul_element = desc_table_div.find_element(By.XPATH, './ul')
 
+                                                    if ul_element:
+
                                                     # Height [mm]
-                                                    try:
-                                                        height_li = ul_element.find_element(By.XPATH,
-                                                                                            './/li[./span[contains(@class, "left") and contains(text(), "Height [mm]")]]')
-                                                        oil_filter_height_mm = height_li.find_element(By.XPATH,
-                                                                                                      './span[contains(@class, "right")]').text
-                                                        print(f"- Height [mm]: {oil_filter_height_mm}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_height_mm = "/"
-                                                        print("- [404] Height [mm] not found.")
+                                                        try:
+                                                            height_li = ul_element.find_element(By.XPATH,
+                                                                                                './/li[./span[contains(@class, "left") and contains(text(), "Height [mm]")]]')
+                                                            oil_filter_height_mm = height_li.find_element(By.XPATH,
+                                                                                                          './span[contains(@class, "right")]').text
+                                                            print(f"- Height [mm]: {oil_filter_height_mm}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_height_mm = "/"
+                                                            print("- [404] Height [mm] not found.")
 
-                                                    # construction Year to
-                                                    try:
-                                                        construction_year_li = ul_element.find_element(By.XPATH,
-                                                                                                       './/li[./span[contains(@class, "left") and contains(text(), "Construction Year to")]]')
-                                                        oil_filter_construction_year_to = construction_year_li.find_element(
-                                                            By.XPATH, './span[contains(@class, "right")]').text
-                                                        print(
-                                                            f"- Construction Year to: {oil_filter_construction_year_to}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_construction_year_to = "/"
-                                                        print("- [404] Construction Year to not found.")
+                                                        # construction Year to
+                                                        try:
+                                                            construction_year_li = ul_element.find_element(By.XPATH,
+                                                                                                           './/li[./span[contains(@class, "left") and contains(text(), "Construction Year to")]]')
+                                                            oil_filter_construction_year_to = construction_year_li.find_element(
+                                                                By.XPATH, './span[contains(@class, "right")]').text
+                                                            print(
+                                                                f"- Construction Year to: {oil_filter_construction_year_to}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_construction_year_to = "/"
+                                                            print("- [404] Construction Year to not found.")
 
-                                                    # construction Year from
-                                                    try:
-                                                        construction_year_from_li = ul_element.find_element(By.XPATH,
-                                                                                                            './/li[./span[contains(@class, "left") and contains(text(), "Construction Year from")]]')
-                                                        oil_filter_construction_year_from = construction_year_from_li.find_element(
-                                                            By.XPATH, './span[contains(@class, "right")]').text
-                                                        print(
-                                                            f"- Construction Year from: {oil_filter_construction_year_from}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_construction_year_from = "/"
-                                                        print("- [404] Construction Year from not found.")
+                                                        # construction Year from
+                                                        try:
+                                                            construction_year_from_li = ul_element.find_element(By.XPATH,
+                                                                                                                './/li[./span[contains(@class, "left") and contains(text(), "Construction Year from")]]')
+                                                            oil_filter_construction_year_from = construction_year_from_li.find_element(
+                                                                By.XPATH, './span[contains(@class, "right")]').text
+                                                            print(
+                                                                f"- Construction Year from: {oil_filter_construction_year_from}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_construction_year_from = "/"
+                                                            print("- [404] Construction Year from not found.")
 
-                                                    # thead size
-                                                    try:
-                                                        thread_size_li = ul_element.find_element(By.XPATH,
-                                                                                                 './/li[./span[contains(@class, "left") and contains(text(), "Thread Size")]]')
-                                                        oil_filter_thread_size = thread_size_li.find_element(By.XPATH,
+                                                        # thead size
+                                                        try:
+                                                            thread_size_li = ul_element.find_element(By.XPATH,
+                                                                                                     './/li[./span[contains(@class, "left") and contains(text(), "Thread Size")]]')
+                                                            oil_filter_thread_size = thread_size_li.find_element(By.XPATH,
+                                                                                                                 './span[contains(@class, "right")]').text
+                                                            print(f"- Thread Size: {oil_filter_thread_size}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_thread_size = "/"
+                                                            print("- [404] Thread Size not found.")
+
+                                                        # diameter (mm)
+                                                        try:
+                                                            diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                  './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter [mm]")]]')
+                                                            oil_filter_diameter = diameter_li.find_element(By.XPATH,
+                                                                                                           './span[contains(@class, "right")]').text
+                                                            print(f"- Diameter [mm]: {oil_filter_diameter}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_diameter = "/"
+                                                            print("- [404] Diameter [mm] not found.")
+
+                                                        # diameter 1 [mm]
+                                                        try:
+                                                            diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                  './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 1 [mm]")]]')
+                                                            oil_filter_diameter1 = diameter_li.find_element(By.XPATH,
+                                                                                                            './span[contains(@class, "right")]').text
+                                                            print(f"- Diameter 1 [mm]: {oil_filter_diameter1}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_diameter1 = "/"
+                                                            print("- [404] Diameter 1 [mm] not found.")
+
+                                                        # diameter 2 [mm]
+                                                        try:
+                                                            diameter2_li = ul_element.find_element(By.XPATH,
+                                                                                                   './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 2 [mm]")]]')
+                                                            oil_filter_diameter2 = diameter2_li.find_element(By.XPATH,
                                                                                                              './span[contains(@class, "right")]').text
-                                                        print(f"- Thread Size: {oil_filter_thread_size}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_thread_size = "/"
-                                                        print("- [404] Thread Size not found.")
+                                                            print(f"- Diameter 2 [mm]: {oil_filter_diameter2}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_diameter2 = "/"
+                                                            print("- [404] Diameter 2 [mm] not found.")
 
-                                                    # diameter (mm)
-                                                    try:
-                                                        diameter_li = ul_element.find_element(By.XPATH,
-                                                                                              './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter [mm]")]]')
-                                                        oil_filter_diameter = diameter_li.find_element(By.XPATH,
-                                                                                                       './span[contains(@class, "right")]').text
-                                                        print(f"- Diameter [mm]: {oil_filter_diameter}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_diameter = "/"
-                                                        print("- [404] Diameter [mm] not found.")
+                                                        # Seal Ring Outer Diameter
+                                                        try:
+                                                            seal_ring_outer_diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                                  './/li[./span[contains(@class, "left") and contains(text(), "Seal Ring Outer Diameter")]]')
+                                                            oil_filter_seal_ring_outer_diameter = seal_ring_outer_diameter_li.find_element(
+                                                                By.XPATH, './span[contains(@class, "right")]').text
+                                                            print(
+                                                                f"- Seal Ring Outer Diameter: {oil_filter_seal_ring_outer_diameter}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_seal_ring_outer_diameter = "/"
+                                                            print("- [404] Seal Ring Outer Diameter not found.")
 
-                                                    # diameter 1 [mm]
-                                                    try:
-                                                        diameter_li = ul_element.find_element(By.XPATH,
-                                                                                              './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 1 [mm]")]]')
-                                                        oil_filter_diameter1 = diameter_li.find_element(By.XPATH,
-                                                                                                        './span[contains(@class, "right")]').text
-                                                        print(f"- Diameter 1 [mm]: {oil_filter_diameter1}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_diameter1 = "/"
-                                                        print("- [404] Diameter 1 [mm] not found.")
+                                                        # Gasket inner diameter
+                                                        try:
+                                                            gasket_inner_diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                               './/li[./span[contains(@class, "left") and contains(text(), "Gasket inner diameter")]]')
+                                                            oil_filter_gasket_inner_diameter = gasket_inner_diameter_li.find_element(
+                                                                By.XPATH, './span[contains(@class, "right")]').text
+                                                            print(
+                                                                f"- Gasket inner diameter: {oil_filter_gasket_inner_diameter}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_gasket_inner_diameter = "/"
+                                                            print("- [404] Gasket inner diameter not found.")
 
-                                                    # diameter 2 [mm]
-                                                    try:
-                                                        diameter2_li = ul_element.find_element(By.XPATH,
-                                                                                               './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 2 [mm]")]]')
-                                                        oil_filter_diameter2 = diameter2_li.find_element(By.XPATH,
-                                                                                                         './span[contains(@class, "right")]').text
-                                                        print(f"- Diameter 2 [mm]: {oil_filter_diameter2}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_diameter2 = "/"
-                                                        print("- [404] Diameter 2 [mm] not found.")
+                                                        # Inner diameter
+                                                        try:
+                                                            oil_filter_inner_diameter_li = ul_element.find_element(
+                                                                By.XPATH,
+                                                                './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter [mm]")]]')
+                                                            oil_filter_inner_diameter = oil_filter_inner_diameter_li.find_element(
+                                                                By.XPATH, './span[contains(@class, "right")]').text
+                                                            print(
+                                                                f"- Inner diameter: {oil_filter_inner_diameter}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_inner_diameter = "/"
+                                                            print("- [404] Inner diameter not found.")
 
-                                                    # Seal Ring Outer Diameter
-                                                    try:
-                                                        seal_ring_outer_diameter_li = ul_element.find_element(By.XPATH,
-                                                                                                              './/li[./span[contains(@class, "left") and contains(text(), "Seal Ring Outer Diameter")]]')
-                                                        oil_filter_seal_ring_outer_diameter = seal_ring_outer_diameter_li.find_element(
-                                                            By.XPATH, './span[contains(@class, "right")]').text
-                                                        print(
-                                                            f"- Seal Ring Outer Diameter: {oil_filter_seal_ring_outer_diameter}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_seal_ring_outer_diameter = "/"
-                                                        print("- [404] Seal Ring Outer Diameter not found.")
+                                                        # Inner diameter 2
+                                                        try:
+                                                            oil_filter_inner_diameter2_li = ul_element.find_element(
+                                                                By.XPATH,
+                                                                './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter 2 [mm]")]]')
+                                                            oil_filter_inner_diameter2 = oil_filter_inner_diameter2_li.find_element(
+                                                                By.XPATH, './span[contains(@class, "right")]').text
+                                                            print(
+                                                                f"- Inner diameter 2: {oil_filter_inner_diameter2}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_inner_diameter2 = "/"
+                                                            print("- [404] Inner diameter 2 not found.")
 
-                                                    # Gasket inner diameter
-                                                    try:
-                                                        gasket_inner_diameter_li = ul_element.find_element(By.XPATH,
-                                                                                                           './/li[./span[contains(@class, "left") and contains(text(), "Gasket inner diameter")]]')
-                                                        oil_filter_gasket_inner_diameter = gasket_inner_diameter_li.find_element(
-                                                            By.XPATH, './span[contains(@class, "right")]').text
-                                                        print(
-                                                            f"- Gasket inner diameter: {oil_filter_gasket_inner_diameter}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_gasket_inner_diameter = "/"
-                                                        print("- [404] Gasket inner diameter not found.")
+                                                        # engine code
+                                                        try:
+                                                            engine_code_li = ul_element.find_element(By.XPATH,
+                                                                                                     './/li[./span[contains(@class, "left") and contains(text(), "Engine Code")]]')
+                                                            engine_code = engine_code_li.find_element(By.XPATH,
+                                                                                                      './span[contains(@class, "right")]').text
+                                                            print(f"- Engine Code: {engine_code}")
+                                                        except NoSuchElementException:
+                                                            engine_code = "/"
+                                                            print("- [404] Engine Code not found.")
 
-                                                    # Inner diameter
-                                                    try:
-                                                        oil_filter_inner_diameter_li = ul_element.find_element(
-                                                            By.XPATH,
-                                                            './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter [mm]")]]')
-                                                        oil_filter_inner_diameter = oil_filter_inner_diameter_li.find_element(
-                                                            By.XPATH, './span[contains(@class, "right")]').text
-                                                        print(
-                                                            f"- Inner diameter: {oil_filter_inner_diameter}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_inner_diameter = "/"
-                                                        print("- [404] Inner diameter not found.")
+                                                        # Seal diameter
+                                                        try:
+                                                            oil_filter_seal_diameter_li = ul_element.find_element(
+                                                                By.XPATH,
+                                                                './/li[./span[contains(@class, "left") and contains(text(), "Seal Diameter [mm]")]]')
+                                                            oil_filter_seal_diameter = oil_filter_seal_diameter_li.find_element(
+                                                                By.XPATH, './span[contains(@class, "right")]').text
+                                                            print(
+                                                                f"- Seal diameter: {oil_filter_seal_diameter}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_seal_diameter = "/"
+                                                            print("- [404] Seal diameter not found.")
 
-                                                    # Inner diameter 2
-                                                    try:
-                                                        oil_filter_inner_diameter2_li = ul_element.find_element(
-                                                            By.XPATH,
-                                                            './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter 2 [mm]")]]')
-                                                        oil_filter_inner_diameter2 = oil_filter_inner_diameter2_li.find_element(
-                                                            By.XPATH, './span[contains(@class, "right")]').text
-                                                        print(
-                                                            f"- Inner diameter 2: {oil_filter_inner_diameter2}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_inner_diameter2 = "/"
-                                                        print("- [404] Inner diameter 2 not found.")
+                                                        # engine number to
+                                                        try:
+                                                            engine_number_to_li = ul_element.find_element(By.XPATH,
+                                                                                                          './/li[./span[contains(@class, "left") and contains(text(), "Engine Number to")]]')
+                                                            oil_filter_engine_number_to = engine_number_to_li.find_element(
+                                                                By.XPATH,
+                                                                './span[contains(@class, "right")]').text
+                                                            print(f"- Engine Number to: {oil_filter_engine_number_to}")
+                                                        except NoSuchElementException:
+                                                            oil_filter_engine_number_to = "/"
+                                                            print("- [404] Engine Number to to not found.")
 
-                                                    # engine code
-                                                    try:
-                                                        engine_code_li = ul_element.find_element(By.XPATH,
-                                                                                                 './/li[./span[contains(@class, "left") and contains(text(), "Engine Code")]]')
-                                                        engine_code = engine_code_li.find_element(By.XPATH,
-                                                                                                  './span[contains(@class, "right")]').text
-                                                        print(f"- Engine Code: {engine_code}")
-                                                    except NoSuchElementException:
-                                                        engine_code = "/"
-                                                        print("- [404] Engine Code not found.")
+                                                        # Product image URL
+                                                        try:
+                                                            product_image_div = WebDriverWait(product_main_div, 10).until(
+                                                                EC.presence_of_element_located(
+                                                                    (By.XPATH, './/div[@class="product-card__image"]'))
+                                                            )
+                                                            product_image_url = product_image_div.find_element(By.TAG_NAME,
+                                                                                                               'img').get_attribute(
+                                                                'src')
+                                                            print(f"- Product image URL: {product_image_url}")
+                                                        except TimeoutException:
+                                                            product_image_url = "/"
+                                                            print("- Timeout waiting for product image element to appear.")
+                                                        except NoSuchElementException:
+                                                            product_image_url = "/"
+                                                            print("- [404] Product image URL not found.")
 
-                                                    # Seal diameter
-                                                    try:
-                                                        oil_filter_seal_diameter_li = ul_element.find_element(
-                                                            By.XPATH,
-                                                            './/li[./span[contains(@class, "left") and contains(text(), "Seal Diameter [mm]")]]')
-                                                        oil_filter_seal_diameter = oil_filter_seal_diameter_li.find_element(
-                                                            By.XPATH, './span[contains(@class, "right")]').text
-                                                        print(
-                                                            f"- Seal diameter: {oil_filter_seal_diameter}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_seal_diameter = "/"
-                                                        print("- [404] Seal diameter not found.")
-
-                                                    # engine number to
-                                                    try:
-                                                        engine_number_to_li = ul_element.find_element(By.XPATH,
-                                                                                                      './/li[./span[contains(@class, "left") and contains(text(), "Engine Number to")]]')
-                                                        oil_filter_engine_number_to = engine_number_to_li.find_element(
-                                                            By.XPATH,
-                                                            './span[contains(@class, "right")]').text
-                                                        print(f"- Engine Number to: {oil_filter_engine_number_to}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_engine_number_to = "/"
-                                                        print("- [404] Engine Number to to not found.")
-
-                                                    # Product image URL
-                                                    try:
-                                                        product_image_div = WebDriverWait(product_main_div, 10).until(
-                                                            EC.presence_of_element_located(
-                                                                (By.XPATH, './/div[@class="product-card__image"]'))
-                                                        )
-                                                        product_image_url = product_image_div.find_element(By.TAG_NAME,
-                                                                                                           'img').get_attribute(
-                                                            'src')
-                                                        print(f"- Product image URL: {product_image_url}")
-                                                    except TimeoutException:
-                                                        product_image_url = "/"
-                                                        print("- Timeout waiting for product image element to appear.")
-                                                    except NoSuchElementException:
-                                                        product_image_url = "/"
-                                                        print("- [404] Product image URL not found.")
-
-                                                    append_to_excel(file_path,
-                                                                    [oil_filter_name, article_number,
-                                                                     oil_filter_brand_name,
-                                                                     oil_filter_type,
-                                                                     oil_filter_height_mm,
-                                                                     oil_filter_construction_year_to,
-                                                                     oil_filter_construction_year_from,
-                                                                     oil_filter_thread_size,
-                                                                     oil_filter_diameter, oil_filter_diameter1,
-                                                                     oil_filter_diameter2,
-                                                                     oil_filter_seal_ring_outer_diameter,
-                                                                     oil_filter_gasket_inner_diameter,
-                                                                     oil_filter_inner_diameter,
-                                                                     oil_filter_inner_diameter2,
-                                                                     oil_filter_seal_diameter, engine_code,
-                                                                     oil_filter_engine_number_to, product_image_url,
-                                                                     brand_name, model_name, series_name, engine_name])
+                                                        append_to_excel(file_path,
+                                                                        [oil_filter_name, article_number,
+                                                                         oil_filter_brand_name,
+                                                                         oil_filter_type,
+                                                                         oil_filter_height_mm,
+                                                                         oil_filter_construction_year_to,
+                                                                         oil_filter_construction_year_from,
+                                                                         oil_filter_thread_size,
+                                                                         oil_filter_diameter, oil_filter_diameter1,
+                                                                         oil_filter_diameter2,
+                                                                         oil_filter_seal_ring_outer_diameter,
+                                                                         oil_filter_gasket_inner_diameter,
+                                                                         oil_filter_inner_diameter,
+                                                                         oil_filter_inner_diameter2,
+                                                                         oil_filter_seal_diameter, engine_code,
+                                                                         oil_filter_engine_number_to, product_image_url,
+                                                                         brand_name, model_name, series_name, engine_name])
+                                                    else:
+                                                        print("ul_element not found.")
 
                                                 except NoSuchElementException:
                                                     print("No products found in the new listing.")
@@ -648,15 +673,23 @@ def online_car_parts(driver, file_path):
                                 select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
                                 options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
                                 continue
-                    # Ponovno pronalaženje serije nakon iteracije kroz motore
-                    main_div = driver.find_element(By.XPATH, './/div[contains(@class, "header-select__choosse-wrap")]')
-                    selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
-                    second_selector_div = selector_divs[1]
-                    select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
-                    models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
-                    model = models[j]
-                    options_series = model.find_elements(By.TAG_NAME, 'option')
+                    try:
+                        # Ponovno pronalaženje serije nakon iteracije kroz motore
+                        main_div = driver.find_element(By.XPATH, './/div[contains(@class, "header-select__choosse-wrap")]')
+                        selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
+                        second_selector_div = selector_divs[1]
+                        select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
+                        models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
+                        if j < len(models):
+                            model = models[j]
+                            options_series = model.find_elements(By.TAG_NAME, 'option')
+                        else:
+                            print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
+                    except IndexError as e:
+                        print(f"IndexError: {e}")
             print("---------------")
+            workbook.save(file_path)
+            print("Brand saved")
             time_now = datetime.now()
             formatted_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
             print("----------------Time now:", formatted_time)
