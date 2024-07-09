@@ -208,7 +208,7 @@ def online_car_parts(driver, file_path):
     # }
 
     desired_brands = {
-        "ABARTH", "LAMBORGHINI"
+        "JAGUAR"
     }
 
     # Pronalaženje svih opcija unutar alphabetical_optgroup elementa
@@ -683,10 +683,48 @@ def online_car_parts(driver, file_path):
                         if j < len(models):
                             model = models[j]
                             options_series = model.find_elements(By.TAG_NAME, 'option')
+                            print(f"PASSED: 'j' ({j}) is in the range for models list (length {len(models)})")
                         else:
                             print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
+                            screenshot_path = "/home/nikola/Projects/Local Projects/online-car-parts/error.png"
+                            driver.save_screenshot(screenshot_path)
                     except IndexError as e:
-                        print(f"IndexError: {e}")
+                        try:
+                            print(f"IndexError: {e}")
+                            driver.refresh()
+                            sleep(5)
+                            main_div = driver.find_element(By.XPATH,
+                                                           './/div[contains(@class, "header-select__choosse-wrap")]')
+                            selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
+                            second_selector_div = selector_divs[1]
+                            select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
+                            models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
+                            if j < len(models):
+                                model = models[j]
+                                options_series = model.find_elements(By.TAG_NAME, 'option')
+                            else:
+                                print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
+                        except IndexError as e:
+                            print(f"IndexError: {e}")
+                            driver.refresh()
+                            sleep(5)
+                            continue
+                    except StaleElementReferenceException as e:
+                        print(f"StaleElementReferenceException: {e}")
+                        # Ponovo pronađite element i nastavite
+                        driver.refresh()
+                        sleep(5)
+                        main_div = driver.find_element(By.XPATH,
+                                                       './/div[contains(@class, "header-select__choosse-wrap")]')
+                        selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
+                        second_selector_div = selector_divs[1]
+                        select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
+                        models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
+                        if j < len(models):
+                            model = models[j]
+                            options_series = model.find_elements(By.TAG_NAME, 'option')
+                        else:
+                            print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
             print("---------------")
             workbook.save(file_path)
             print("Brand saved")
