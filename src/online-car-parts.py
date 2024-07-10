@@ -208,7 +208,7 @@ def online_car_parts(driver, file_path):
     # }
 
     desired_brands = {
-        "JAGUAR"
+        "ABARTH"
     }
 
     # Pronalaženje svih opcija unutar alphabetical_optgroup elementa
@@ -241,456 +241,478 @@ def online_car_parts(driver, file_path):
                 options_series = model.find_elements(By.TAG_NAME, 'option')
                 sleep(0.5)
                 series_name = None
-                for k in range(len(options_series)):
-                    # options_series = model.find_elements(By.TAG_NAME, 'option')
-                    option_series = options_series[k]
-                    # Provera validnosti serije pre ekstrakcije imena
-                    if is_valid_year_range(option_series.text):
-                        series_name = option_series.text
-                        option_series.click()
-                        sleep(0.5)
+                try:
+                    for k in range(len(options_series)):
+                        # options_series = model.find_elements(By.TAG_NAME, 'option')
+                        option_series = options_series[k]
+                        # Provera validnosti serije pre ekstrakcije imena
+                        if is_valid_year_range(option_series.text):
+                            series_name = option_series.text
+                            option_series.click()
+                            sleep(0.5)
 
-                    if series_name:
-                        # Ponovno pronalaženje elementa za motor
-                        main_div = driver.find_element(By.XPATH,
-                                                       './/div[contains(@class, "header-select__choosse-wrap")]')
-                        selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
-                        engine_selector_div = selector_divs[2]
-                        select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
-                        options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
-                        for l in range(len(options_engine)):
-                            try:
-                                options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
-                                if l < len(options_engine):
-                                    option_engine = options_engine[l]
-                                    if option_engine.get_attribute('value') != "-1":
-                                        engine_name = option_engine.text
-                                        print(f"{brand_name} - {model_name} - {series_name} - {engine_name}")
+                        if series_name:
+                            # Ponovno pronalaženje elementa za motor
+                            main_div = driver.find_element(By.XPATH,
+                                                           './/div[contains(@class, "header-select__choosse-wrap")]')
+                            selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
+                            engine_selector_div = selector_divs[2]
+                            select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
+                            options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
+                            for l in range(len(options_engine)):
+                                try:
+                                    options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
+                                    if l < len(options_engine):
+                                        option_engine = options_engine[l]
+                                        if option_engine.get_attribute('value') != "-1":
+                                            engine_name = option_engine.text
+                                            print(f"{brand_name} - {model_name} - {series_name} - {engine_name}")
 
-                                        try:
-                                            option_engine.click()
-                                        except ElementClickInterceptedException:
-                                            accept_cookies(driver)
-                                            sleep(1)
-                                            option_engine.click()
-                                        except Exception as e:
-                                            print(f"An error occurred while clicking option_engine click button: {e}")
-                                        # Dodavanje podataka u Excel fajl
-                                        # append_to_excel(file_path, [brand_name, model_name, series_name, engine_name])
-
-                                        try:
-                                            search_button = main_div.find_element(By.XPATH,
-                                                                                  './/button[@type="button" and contains(text(), "Search")]')
-                                            search_button.click()
-                                        except ElementClickInterceptedException:
-                                            accept_cookies(driver)
-                                            sleep(1)
-                                            search_button = main_div.find_element(By.XPATH,
-                                                                                  './/button[@type="button" and contains(text(), "Search")]')
-                                            search_button.click()
-                                        except Exception as e:
-                                            print(f"An error occurred while clicking search button: {e}")
-
-                                        current_url = driver.current_url
-                                        wait_for_url_change(driver, current_url)
-
-                                        # Čekanje pojave listing div-a
-                                        wait_for_listing_div(driver)
-
-                                        # Sleep 0.5 sekundi nakon što se pojavi listing div
-                                        # sleep(0.5)
-                                        # WebDriverWait(driver, 30).until(
-                                        #     EC.visibility_of_element_located((By.XPATH, '//div[@class="filters-wrapper" and @data-listing-filters=""]'))
-                                        # )
-
-                                        WebDriverWait(driver, 60).until(
-                                            EC.visibility_of_element_located((By.XPATH,
-                                                                              '//div[@class="col col-md-12 col-xl-10 pl-0 order-2 content-page"]'))
-                                        )
-
-                                        # Definisanje brendova za pretragu, uključujući FILTRON
-                                        brands_to_search = ["FILTRON", "BOSCH", "MANN-FILTER", "CLEAN FILTER",
-                                                            "PURFLUX", "HENGST"]
-
-                                        found_brands = []
-                                        product_main_divs = []
-
-                                        # Kliknuti next_button odmah na početku
-                                        try:
-                                            current_url = driver.current_url
-                                            filtered_url = get_filtered_url(current_url)
-
-                                            # Učitavanje filtriranog URL-a
-                                            driver.get(filtered_url)
-                                            # WebDriverWait(driver, 30).until(EC.presence_of_element_located(
-                                            #     (By.XPATH, '//div[@class="container-fluid"]')))
-                                            WebDriverWait(driver, 60).until(EC.invisibility_of_element_located(
-                                                (By.XPATH, '//a[@class="listing-pagination__next-wrap active"]')))
-                                        except TimeoutException:
-                                            print("TimeoutException. Refreshing the page")
-                                            driver.refresh()
-                                            WebDriverWait(driver, 30).until(EC.presence_of_element_located(
-                                                (By.XPATH, '//div[@class="container-fluid"]')))
-                                        except NoSuchElementException:
-                                            print("No more pages.")
-                                        except ElementClickInterceptedException:
-                                            print("Element click intercepted.")
-
-                                        # Iteracija kroz sve brendove
-                                        for brand in brands_to_search:
                                             try:
-                                                product_cards = driver.find_elements(By.XPATH, '//div[@class="product-card" and not(@data-recommended-products)]')
-                                            except StaleElementReferenceException:
-                                                print(
-                                                    "StaleElementReferenceException: product_cards couldn't be found.")
-                                                continue  # Nastavi sa sledećim brendom ako trenutni nije pronađen
+                                                option_engine.click()
+                                            except ElementClickInterceptedException:
+                                                accept_cookies(driver)
+                                                sleep(1)
+                                                option_engine.click()
+                                            except Exception as e:
+                                                print(f"An error occurred while clicking option_engine click button: {e}")
+                                            # Dodavanje podataka u Excel fajl
+                                            # append_to_excel(file_path, [brand_name, model_name, series_name, engine_name])
 
-                                            for card in product_cards:
+                                            try:
+                                                search_button = main_div.find_element(By.XPATH,
+                                                                                      './/button[@type="button" and contains(text(), "Search")]')
+                                                search_button.click()
+                                            except ElementClickInterceptedException:
+                                                accept_cookies(driver)
+                                                sleep(1)
+                                                search_button = main_div.find_element(By.XPATH,
+                                                                                      './/button[@type="button" and contains(text(), "Search")]')
+                                                search_button.click()
+                                            except Exception as e:
+                                                print(f"An error occurred while clicking search button: {e}")
+
+                                            current_url = driver.current_url
+                                            wait_for_url_change(driver, current_url)
+
+                                            # Čekanje pojave listing div-a
+                                            wait_for_listing_div(driver)
+
+                                            # Sleep 0.5 sekundi nakon što se pojavi listing div
+                                            # sleep(0.5)
+                                            # WebDriverWait(driver, 30).until(
+                                            #     EC.visibility_of_element_located((By.XPATH, '//div[@class="filters-wrapper" and @data-listing-filters=""]'))
+                                            # )
+
+                                            WebDriverWait(driver, 60).until(
+                                                EC.visibility_of_element_located((By.XPATH,
+                                                                                  '//div[@class="col col-md-12 col-xl-10 pl-0 order-2 content-page"]'))
+                                            )
+
+                                            # Definisanje brendova za pretragu, uključujući FILTRON
+                                            brands_to_search = ["FILTRON", "BOSCH", "MANN-FILTER", "CLEAN FILTER",
+                                                                "PURFLUX", "HENGST"]
+
+                                            found_brands = []
+                                            product_main_divs = []
+
+                                            # Kliknuti next_button odmah na početku
+                                            try:
+                                                current_url = driver.current_url
+                                                filtered_url = get_filtered_url(current_url)
+
+                                                # Učitavanje filtriranog URL-a
+                                                driver.get(filtered_url)
+                                                # WebDriverWait(driver, 30).until(EC.presence_of_element_located(
+                                                #     (By.XPATH, '//div[@class="container-fluid"]')))
+                                                WebDriverWait(driver, 60).until(EC.invisibility_of_element_located(
+                                                    (By.XPATH, '//a[@class="listing-pagination__next-wrap active"]')))
+                                            except TimeoutException:
+                                                print("TimeoutException. Refreshing the page")
+                                                driver.refresh()
+                                                WebDriverWait(driver, 30).until(EC.presence_of_element_located(
+                                                    (By.XPATH, '//div[@class="container-fluid"]')))
+                                            except NoSuchElementException:
+                                                print("No more pages.")
+                                            except ElementClickInterceptedException:
+                                                print("Element click intercepted.")
+
+                                            # Iteracija kroz sve brendove
+                                            for brand in brands_to_search:
                                                 try:
-                                                    product_title = card.find_element(By.XPATH,
-                                                                                      './/div[@class="product-card__title"]/a').text
-                                                    if brand in product_title:
-                                                        print(f"* {brand} found")
-                                                        found_brands.append(brand)
-                                                        product_main_divs.append(card)  # Čuvamo main div u listu
-                                                        break  # Nastavi sa sledećim brendom čim pronađe trenutni
-                                                except NoSuchElementException:
-                                                    print(
-                                                        "NoSuchElementException. continue.")  # Nastavi sa sledećim elementom ako trenutni nije pronađen
+                                                    product_cards = driver.find_elements(By.XPATH, '//div[@class="product-card" and not(@data-recommended-products)]')
                                                 except StaleElementReferenceException:
                                                     print(
-                                                        "StaleElementReferenceException: product_title couldn't be found.")
+                                                        "StaleElementReferenceException: product_cards couldn't be found.")
+                                                    continue  # Nastavi sa sledećim brendom ako trenutni nije pronađen
 
-                                        # Ispis poruke za pronađene brendove
-                                        for found_brand, product_main_div in zip(found_brands, product_main_divs):
-                                            print(f"************* {found_brand} scraping data ************")
-                                            if product_main_div:
-                                                try:
-
+                                                for card in product_cards:
                                                     try:
-                                                        article_number_div = product_main_div.find_element(By.XPATH,
-                                                                                                           './/div[@class="product-card__artkl"]')
-                                                        article_number = article_number_div.find_element(By.TAG_NAME,
-                                                                                                         'span').text.strip().replace(
-                                                            " ", "")
-                                                        print(f"- Article №: {article_number}")
+                                                        product_title = card.find_element(By.XPATH,
+                                                                                          './/div[@class="product-card__title"]/a').text
+                                                        if brand in product_title:
+                                                            print(f"* {brand} found")
+                                                            found_brands.append(brand)
+                                                            product_main_divs.append(card)  # Čuvamo main div u listu
+                                                            break  # Nastavi sa sledećim brendom čim pronađe trenutni
                                                     except NoSuchElementException:
-                                                        article_number = "Unknown"
-                                                        print("- [404] Article number not found.")
+                                                        print(
+                                                            "NoSuchElementException. continue.")  # Nastavi sa sledećim elementom ako trenutni nije pronađen
+                                                    except StaleElementReferenceException:
+                                                        print(
+                                                            "StaleElementReferenceException: product_title couldn't be found.")
 
-                                                    # filter name
+                                            # Ispis poruke za pronađene brendove
+                                            for found_brand, product_main_div in zip(found_brands, product_main_divs):
+                                                print(f"************* {found_brand} scraping data ************")
+                                                if product_main_div:
                                                     try:
-                                                        oil_filter_name_element = product_main_div.find_element(
-                                                            By.XPATH,
-                                                            './/div[@class="product-card__title"]//a[contains(@class, "product-card__title-link")]')
-                                                        oil_filter_name = oil_filter_name_element.text.split('\n')[
-                                                            0].strip()
-                                                        print(f"- Original Filter name: {oil_filter_name}")
 
-                                                        if article_number in oil_filter_name:
-                                                            oil_filter_name = oil_filter_name.replace(article_number,
-                                                                                                      '').strip()
-
-                                                        print(f"- Filter name: {oil_filter_name}")
-                                                    except NoSuchElementException:
-                                                        print("- [404] Filter name not found.")
-                                                        continue
-
-                                                    # filter brand
-                                                    try:
-                                                        oil_filter_brand_name = found_brand
-                                                        print(f"- Filter brand: {oil_filter_brand_name}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_brand_name = "Unknown"
-                                                        print("- [404] Filter brand not found.")
-
-                                                    ul_element = None
-
-                                                    # filter type
-                                                    try:
-                                                        desc_table_div = WebDriverWait(product_main_div, 10).until(
-                                                            EC.presence_of_element_located((By.XPATH,
-                                                                                            './/div[contains(@class, "product-card__desc-table")]'))
-                                                        )
-
-                                                        more_button = None
                                                         try:
-                                                            more_button = desc_table_div.find_element(By.XPATH,
-                                                                                                      './/div[@class="product-desc-more"]')
+                                                            article_number_div = product_main_div.find_element(By.XPATH,
+                                                                                                               './/div[@class="product-card__artkl"]')
+                                                            article_number = article_number_div.find_element(By.TAG_NAME,
+                                                                                                             'span').text.strip().replace(
+                                                                " ", "")
+                                                            print(f"- Article №: {article_number}")
                                                         except NoSuchElementException:
-                                                            print("No 'More+' button located.")
+                                                            article_number = "Unknown"
+                                                            print("- [404] Article number not found.")
 
-                                                        if more_button:
-                                                            print("'More+' button located.")
-                                                            driver.execute_script(
-                                                                "arguments[0].scrollIntoView(true); window.scrollBy(0, -300);",
-                                                                more_button)
-                                                            more_button.click()
-                                                            sleep(0.5)
-                                                            desc_table_div = product_main_div.find_element(By.XPATH,
-                                                                                                           './/div[contains(@class, "product-card__desc-table")]')
-
-                                                        ul_element = desc_table_div.find_element(By.XPATH, './ul')
-                                                        filter_type_li = ul_element.find_element(By.XPATH,
-                                                                                                 './li[contains(span[@class="left"], "Filter type")]')
-                                                        oil_filter_type = filter_type_li.find_element(By.XPATH,
-                                                                                                      './span[@class="right"]').text
-                                                        print(f"- Filter type: {oil_filter_type}")
-                                                    except NoSuchElementException:
-                                                        oil_filter_type = "/"
-                                                        print("- [404] Filter type not found.")
-                                                    except TimeoutException:
-                                                        oil_filter_type = "/"
-                                                        print("- [404] Filter type not found.")
-
-                                                    # desc_table_div = product_main_div.find_element(By.XPATH,
-                                                    #                                                './/div[@class="product-card__desc-table "]')
-                                                    # ul_element = desc_table_div.find_element(By.XPATH, './ul')
-
-                                                    if ul_element:
-
-                                                    # Height [mm]
+                                                        # filter name
                                                         try:
-                                                            height_li = ul_element.find_element(By.XPATH,
-                                                                                                './/li[./span[contains(@class, "left") and contains(text(), "Height [mm]")]]')
-                                                            oil_filter_height_mm = height_li.find_element(By.XPATH,
-                                                                                                          './span[contains(@class, "right")]').text
-                                                            print(f"- Height [mm]: {oil_filter_height_mm}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_height_mm = "/"
-                                                            print("- [404] Height [mm] not found.")
-
-                                                        # construction Year to
-                                                        try:
-                                                            construction_year_li = ul_element.find_element(By.XPATH,
-                                                                                                           './/li[./span[contains(@class, "left") and contains(text(), "Construction Year to")]]')
-                                                            oil_filter_construction_year_to = construction_year_li.find_element(
-                                                                By.XPATH, './span[contains(@class, "right")]').text
-                                                            print(
-                                                                f"- Construction Year to: {oil_filter_construction_year_to}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_construction_year_to = "/"
-                                                            print("- [404] Construction Year to not found.")
-
-                                                        # construction Year from
-                                                        try:
-                                                            construction_year_from_li = ul_element.find_element(By.XPATH,
-                                                                                                                './/li[./span[contains(@class, "left") and contains(text(), "Construction Year from")]]')
-                                                            oil_filter_construction_year_from = construction_year_from_li.find_element(
-                                                                By.XPATH, './span[contains(@class, "right")]').text
-                                                            print(
-                                                                f"- Construction Year from: {oil_filter_construction_year_from}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_construction_year_from = "/"
-                                                            print("- [404] Construction Year from not found.")
-
-                                                        # thead size
-                                                        try:
-                                                            thread_size_li = ul_element.find_element(By.XPATH,
-                                                                                                     './/li[./span[contains(@class, "left") and contains(text(), "Thread Size")]]')
-                                                            oil_filter_thread_size = thread_size_li.find_element(By.XPATH,
-                                                                                                                 './span[contains(@class, "right")]').text
-                                                            print(f"- Thread Size: {oil_filter_thread_size}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_thread_size = "/"
-                                                            print("- [404] Thread Size not found.")
-
-                                                        # diameter (mm)
-                                                        try:
-                                                            diameter_li = ul_element.find_element(By.XPATH,
-                                                                                                  './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter [mm]")]]')
-                                                            oil_filter_diameter = diameter_li.find_element(By.XPATH,
-                                                                                                           './span[contains(@class, "right")]').text
-                                                            print(f"- Diameter [mm]: {oil_filter_diameter}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_diameter = "/"
-                                                            print("- [404] Diameter [mm] not found.")
-
-                                                        # diameter 1 [mm]
-                                                        try:
-                                                            diameter_li = ul_element.find_element(By.XPATH,
-                                                                                                  './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 1 [mm]")]]')
-                                                            oil_filter_diameter1 = diameter_li.find_element(By.XPATH,
-                                                                                                            './span[contains(@class, "right")]').text
-                                                            print(f"- Diameter 1 [mm]: {oil_filter_diameter1}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_diameter1 = "/"
-                                                            print("- [404] Diameter 1 [mm] not found.")
-
-                                                        # diameter 2 [mm]
-                                                        try:
-                                                            diameter2_li = ul_element.find_element(By.XPATH,
-                                                                                                   './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 2 [mm]")]]')
-                                                            oil_filter_diameter2 = diameter2_li.find_element(By.XPATH,
-                                                                                                             './span[contains(@class, "right")]').text
-                                                            print(f"- Diameter 2 [mm]: {oil_filter_diameter2}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_diameter2 = "/"
-                                                            print("- [404] Diameter 2 [mm] not found.")
-
-                                                        # Seal Ring Outer Diameter
-                                                        try:
-                                                            seal_ring_outer_diameter_li = ul_element.find_element(By.XPATH,
-                                                                                                                  './/li[./span[contains(@class, "left") and contains(text(), "Seal Ring Outer Diameter")]]')
-                                                            oil_filter_seal_ring_outer_diameter = seal_ring_outer_diameter_li.find_element(
-                                                                By.XPATH, './span[contains(@class, "right")]').text
-                                                            print(
-                                                                f"- Seal Ring Outer Diameter: {oil_filter_seal_ring_outer_diameter}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_seal_ring_outer_diameter = "/"
-                                                            print("- [404] Seal Ring Outer Diameter not found.")
-
-                                                        # Gasket inner diameter
-                                                        try:
-                                                            gasket_inner_diameter_li = ul_element.find_element(By.XPATH,
-                                                                                                               './/li[./span[contains(@class, "left") and contains(text(), "Gasket inner diameter")]]')
-                                                            oil_filter_gasket_inner_diameter = gasket_inner_diameter_li.find_element(
-                                                                By.XPATH, './span[contains(@class, "right")]').text
-                                                            print(
-                                                                f"- Gasket inner diameter: {oil_filter_gasket_inner_diameter}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_gasket_inner_diameter = "/"
-                                                            print("- [404] Gasket inner diameter not found.")
-
-                                                        # Inner diameter
-                                                        try:
-                                                            oil_filter_inner_diameter_li = ul_element.find_element(
+                                                            oil_filter_name_element = product_main_div.find_element(
                                                                 By.XPATH,
-                                                                './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter [mm]")]]')
-                                                            oil_filter_inner_diameter = oil_filter_inner_diameter_li.find_element(
-                                                                By.XPATH, './span[contains(@class, "right")]').text
-                                                            print(
-                                                                f"- Inner diameter: {oil_filter_inner_diameter}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_inner_diameter = "/"
-                                                            print("- [404] Inner diameter not found.")
+                                                                './/div[@class="product-card__title"]//a[contains(@class, "product-card__title-link")]')
+                                                            oil_filter_name = oil_filter_name_element.text.split('\n')[
+                                                                0].strip()
+                                                            print(f"- Original Filter name: {oil_filter_name}")
 
-                                                        # Inner diameter 2
-                                                        try:
-                                                            oil_filter_inner_diameter2_li = ul_element.find_element(
-                                                                By.XPATH,
-                                                                './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter 2 [mm]")]]')
-                                                            oil_filter_inner_diameter2 = oil_filter_inner_diameter2_li.find_element(
-                                                                By.XPATH, './span[contains(@class, "right")]').text
-                                                            print(
-                                                                f"- Inner diameter 2: {oil_filter_inner_diameter2}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_inner_diameter2 = "/"
-                                                            print("- [404] Inner diameter 2 not found.")
+                                                            if article_number in oil_filter_name:
+                                                                oil_filter_name = oil_filter_name.replace(article_number,
+                                                                                                          '').strip()
 
-                                                        # engine code
-                                                        try:
-                                                            engine_code_li = ul_element.find_element(By.XPATH,
-                                                                                                     './/li[./span[contains(@class, "left") and contains(text(), "Engine Code")]]')
-                                                            engine_code = engine_code_li.find_element(By.XPATH,
-                                                                                                      './span[contains(@class, "right")]').text
-                                                            print(f"- Engine Code: {engine_code}")
+                                                            print(f"- Filter name: {oil_filter_name}")
                                                         except NoSuchElementException:
-                                                            engine_code = "/"
-                                                            print("- [404] Engine Code not found.")
+                                                            print("- [404] Filter name not found.")
+                                                            continue
 
-                                                        # Seal diameter
+                                                        # filter brand
                                                         try:
-                                                            oil_filter_seal_diameter_li = ul_element.find_element(
-                                                                By.XPATH,
-                                                                './/li[./span[contains(@class, "left") and contains(text(), "Seal Diameter [mm]")]]')
-                                                            oil_filter_seal_diameter = oil_filter_seal_diameter_li.find_element(
-                                                                By.XPATH, './span[contains(@class, "right")]').text
-                                                            print(
-                                                                f"- Seal diameter: {oil_filter_seal_diameter}")
+                                                            oil_filter_brand_name = found_brand
+                                                            print(f"- Filter brand: {oil_filter_brand_name}")
                                                         except NoSuchElementException:
-                                                            oil_filter_seal_diameter = "/"
-                                                            print("- [404] Seal diameter not found.")
+                                                            oil_filter_brand_name = "Unknown"
+                                                            print("- [404] Filter brand not found.")
 
-                                                        # engine number to
-                                                        try:
-                                                            engine_number_to_li = ul_element.find_element(By.XPATH,
-                                                                                                          './/li[./span[contains(@class, "left") and contains(text(), "Engine Number to")]]')
-                                                            oil_filter_engine_number_to = engine_number_to_li.find_element(
-                                                                By.XPATH,
-                                                                './span[contains(@class, "right")]').text
-                                                            print(f"- Engine Number to: {oil_filter_engine_number_to}")
-                                                        except NoSuchElementException:
-                                                            oil_filter_engine_number_to = "/"
-                                                            print("- [404] Engine Number to to not found.")
+                                                        ul_element = None
 
-                                                        # Product image URL
+                                                        # filter type
                                                         try:
-                                                            product_image_div = WebDriverWait(product_main_div, 10).until(
-                                                                EC.presence_of_element_located(
-                                                                    (By.XPATH, './/div[@class="product-card__image"]'))
+                                                            desc_table_div = WebDriverWait(product_main_div, 10).until(
+                                                                EC.presence_of_element_located((By.XPATH,
+                                                                                                './/div[contains(@class, "product-card__desc-table")]'))
                                                             )
-                                                            product_image_url = product_image_div.find_element(By.TAG_NAME,
-                                                                                                               'img').get_attribute(
-                                                                'src')
-                                                            print(f"- Product image URL: {product_image_url}")
-                                                        except TimeoutException:
-                                                            product_image_url = "/"
-                                                            print("- Timeout waiting for product image element to appear.")
+
+                                                            more_button = None
+                                                            try:
+                                                                more_button = desc_table_div.find_element(By.XPATH,
+                                                                                                          './/div[@class="product-desc-more"]')
+                                                            except NoSuchElementException:
+                                                                print("No 'More+' button located.")
+
+                                                            if more_button:
+                                                                print("'More+' button located.")
+                                                                driver.execute_script(
+                                                                    "arguments[0].scrollIntoView(true); window.scrollBy(0, -300);",
+                                                                    more_button)
+                                                                more_button.click()
+                                                                sleep(0.5)
+                                                                desc_table_div = product_main_div.find_element(By.XPATH,
+                                                                                                               './/div[contains(@class, "product-card__desc-table")]')
+
+                                                            ul_element = desc_table_div.find_element(By.XPATH, './ul')
+                                                            filter_type_li = ul_element.find_element(By.XPATH,
+                                                                                                     './li[contains(span[@class="left"], "Filter type")]')
+                                                            oil_filter_type = filter_type_li.find_element(By.XPATH,
+                                                                                                          './span[@class="right"]').text
+                                                            print(f"- Filter type: {oil_filter_type}")
                                                         except NoSuchElementException:
-                                                            product_image_url = "/"
-                                                            print("- [404] Product image URL not found.")
+                                                            oil_filter_type = "/"
+                                                            print("- [404] Filter type not found.")
+                                                        except TimeoutException:
+                                                            oil_filter_type = "/"
+                                                            print("- [404] Filter type not found.")
 
-                                                        append_to_excel(file_path,
-                                                                        [oil_filter_name, article_number,
-                                                                         oil_filter_brand_name,
-                                                                         oil_filter_type,
-                                                                         oil_filter_height_mm,
-                                                                         oil_filter_construction_year_to,
-                                                                         oil_filter_construction_year_from,
-                                                                         oil_filter_thread_size,
-                                                                         oil_filter_diameter, oil_filter_diameter1,
-                                                                         oil_filter_diameter2,
-                                                                         oil_filter_seal_ring_outer_diameter,
-                                                                         oil_filter_gasket_inner_diameter,
-                                                                         oil_filter_inner_diameter,
-                                                                         oil_filter_inner_diameter2,
-                                                                         oil_filter_seal_diameter, engine_code,
-                                                                         oil_filter_engine_number_to, product_image_url,
-                                                                         brand_name, model_name, series_name, engine_name])
-                                                    else:
-                                                        print("ul_element not found.")
+                                                        # desc_table_div = product_main_div.find_element(By.XPATH,
+                                                        #                                                './/div[@class="product-card__desc-table "]')
+                                                        # ul_element = desc_table_div.find_element(By.XPATH, './ul')
 
-                                                except NoSuchElementException:
-                                                    print("No products found in the new listing.")
-                                                except StaleElementReferenceException:
-                                                    print("StaleElementReferenceException: skipping this filter.")
+                                                        if ul_element:
 
-                                        # Nastavak izvršavanja
-                                        main_div = driver.find_element(By.XPATH,
-                                                                       './/div[contains(@class, "header-select__choosse-wrap")]')
-                                        selector_divs = main_div.find_elements(By.XPATH,
-                                                                               './/div[contains(@class, "selector")]')
-                                        engine_selector_div = selector_divs[2]
-                                        select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
-                                        options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
-                            except StaleElementReferenceException:
-                                print("StaleElementReferenceException. Next car...")
+                                                        # Height [mm]
+                                                            try:
+                                                                height_li = ul_element.find_element(By.XPATH,
+                                                                                                    './/li[./span[contains(@class, "left") and contains(text(), "Height [mm]")]]')
+                                                                oil_filter_height_mm = height_li.find_element(By.XPATH,
+                                                                                                              './span[contains(@class, "right")]').text
+                                                                print(f"- Height [mm]: {oil_filter_height_mm}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_height_mm = "/"
+                                                                print("- [404] Height [mm] not found.")
+
+                                                            # construction Year to
+                                                            try:
+                                                                construction_year_li = ul_element.find_element(By.XPATH,
+                                                                                                               './/li[./span[contains(@class, "left") and contains(text(), "Construction Year to")]]')
+                                                                oil_filter_construction_year_to = construction_year_li.find_element(
+                                                                    By.XPATH, './span[contains(@class, "right")]').text
+                                                                print(
+                                                                    f"- Construction Year to: {oil_filter_construction_year_to}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_construction_year_to = "/"
+                                                                print("- [404] Construction Year to not found.")
+
+                                                            # construction Year from
+                                                            try:
+                                                                construction_year_from_li = ul_element.find_element(By.XPATH,
+                                                                                                                    './/li[./span[contains(@class, "left") and contains(text(), "Construction Year from")]]')
+                                                                oil_filter_construction_year_from = construction_year_from_li.find_element(
+                                                                    By.XPATH, './span[contains(@class, "right")]').text
+                                                                print(
+                                                                    f"- Construction Year from: {oil_filter_construction_year_from}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_construction_year_from = "/"
+                                                                print("- [404] Construction Year from not found.")
+
+                                                            # thead size
+                                                            try:
+                                                                thread_size_li = ul_element.find_element(By.XPATH,
+                                                                                                         './/li[./span[contains(@class, "left") and contains(text(), "Thread Size")]]')
+                                                                oil_filter_thread_size = thread_size_li.find_element(By.XPATH,
+                                                                                                                     './span[contains(@class, "right")]').text
+                                                                print(f"- Thread Size: {oil_filter_thread_size}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_thread_size = "/"
+                                                                print("- [404] Thread Size not found.")
+
+                                                            # diameter (mm)
+                                                            try:
+                                                                diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                      './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter [mm]")]]')
+                                                                oil_filter_diameter = diameter_li.find_element(By.XPATH,
+                                                                                                               './span[contains(@class, "right")]').text
+                                                                print(f"- Diameter [mm]: {oil_filter_diameter}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_diameter = "/"
+                                                                print("- [404] Diameter [mm] not found.")
+
+                                                            # diameter 1 [mm]
+                                                            try:
+                                                                diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                      './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 1 [mm]")]]')
+                                                                oil_filter_diameter1 = diameter_li.find_element(By.XPATH,
+                                                                                                                './span[contains(@class, "right")]').text
+                                                                print(f"- Diameter 1 [mm]: {oil_filter_diameter1}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_diameter1 = "/"
+                                                                print("- [404] Diameter 1 [mm] not found.")
+
+                                                            # diameter 2 [mm]
+                                                            try:
+                                                                diameter2_li = ul_element.find_element(By.XPATH,
+                                                                                                       './/li[./span[contains(@class, "left") and starts-with(normalize-space(text()), "Diameter 2 [mm]")]]')
+                                                                oil_filter_diameter2 = diameter2_li.find_element(By.XPATH,
+                                                                                                                 './span[contains(@class, "right")]').text
+                                                                print(f"- Diameter 2 [mm]: {oil_filter_diameter2}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_diameter2 = "/"
+                                                                print("- [404] Diameter 2 [mm] not found.")
+
+                                                            # Seal Ring Outer Diameter
+                                                            try:
+                                                                seal_ring_outer_diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                                      './/li[./span[contains(@class, "left") and contains(text(), "Seal Ring Outer Diameter")]]')
+                                                                oil_filter_seal_ring_outer_diameter = seal_ring_outer_diameter_li.find_element(
+                                                                    By.XPATH, './span[contains(@class, "right")]').text
+                                                                print(
+                                                                    f"- Seal Ring Outer Diameter: {oil_filter_seal_ring_outer_diameter}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_seal_ring_outer_diameter = "/"
+                                                                print("- [404] Seal Ring Outer Diameter not found.")
+
+                                                            # Gasket inner diameter
+                                                            try:
+                                                                gasket_inner_diameter_li = ul_element.find_element(By.XPATH,
+                                                                                                                   './/li[./span[contains(@class, "left") and contains(text(), "Gasket inner diameter")]]')
+                                                                oil_filter_gasket_inner_diameter = gasket_inner_diameter_li.find_element(
+                                                                    By.XPATH, './span[contains(@class, "right")]').text
+                                                                print(
+                                                                    f"- Gasket inner diameter: {oil_filter_gasket_inner_diameter}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_gasket_inner_diameter = "/"
+                                                                print("- [404] Gasket inner diameter not found.")
+
+                                                            # Inner diameter
+                                                            try:
+                                                                oil_filter_inner_diameter_li = ul_element.find_element(
+                                                                    By.XPATH,
+                                                                    './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter [mm]")]]')
+                                                                oil_filter_inner_diameter = oil_filter_inner_diameter_li.find_element(
+                                                                    By.XPATH, './span[contains(@class, "right")]').text
+                                                                print(
+                                                                    f"- Inner diameter: {oil_filter_inner_diameter}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_inner_diameter = "/"
+                                                                print("- [404] Inner diameter not found.")
+
+                                                            # Inner diameter 2
+                                                            try:
+                                                                oil_filter_inner_diameter2_li = ul_element.find_element(
+                                                                    By.XPATH,
+                                                                    './/li[./span[contains(@class, "left") and contains(text(), "Inner Diameter 2 [mm]")]]')
+                                                                oil_filter_inner_diameter2 = oil_filter_inner_diameter2_li.find_element(
+                                                                    By.XPATH, './span[contains(@class, "right")]').text
+                                                                print(
+                                                                    f"- Inner diameter 2: {oil_filter_inner_diameter2}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_inner_diameter2 = "/"
+                                                                print("- [404] Inner diameter 2 not found.")
+
+                                                            # engine code
+                                                            try:
+                                                                engine_code_li = ul_element.find_element(By.XPATH,
+                                                                                                         './/li[./span[contains(@class, "left") and contains(text(), "Engine Code")]]')
+                                                                engine_code = engine_code_li.find_element(By.XPATH,
+                                                                                                          './span[contains(@class, "right")]').text
+                                                                print(f"- Engine Code: {engine_code}")
+                                                            except NoSuchElementException:
+                                                                engine_code = "/"
+                                                                print("- [404] Engine Code not found.")
+
+                                                            # Seal diameter
+                                                            try:
+                                                                oil_filter_seal_diameter_li = ul_element.find_element(
+                                                                    By.XPATH,
+                                                                    './/li[./span[contains(@class, "left") and contains(text(), "Seal Diameter [mm]")]]')
+                                                                oil_filter_seal_diameter = oil_filter_seal_diameter_li.find_element(
+                                                                    By.XPATH, './span[contains(@class, "right")]').text
+                                                                print(
+                                                                    f"- Seal diameter: {oil_filter_seal_diameter}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_seal_diameter = "/"
+                                                                print("- [404] Seal diameter not found.")
+
+                                                            # engine number to
+                                                            try:
+                                                                engine_number_to_li = ul_element.find_element(By.XPATH,
+                                                                                                              './/li[./span[contains(@class, "left") and contains(text(), "Engine Number to")]]')
+                                                                oil_filter_engine_number_to = engine_number_to_li.find_element(
+                                                                    By.XPATH,
+                                                                    './span[contains(@class, "right")]').text
+                                                                print(f"- Engine Number to: {oil_filter_engine_number_to}")
+                                                            except NoSuchElementException:
+                                                                oil_filter_engine_number_to = "/"
+                                                                print("- [404] Engine Number to to not found.")
+
+                                                            # Product image URL
+                                                            try:
+                                                                product_image_div = WebDriverWait(product_main_div, 10).until(
+                                                                    EC.presence_of_element_located(
+                                                                        (By.XPATH, './/div[@class="product-card__image"]'))
+                                                                )
+                                                                product_image_url = product_image_div.find_element(By.TAG_NAME,
+                                                                                                                   'img').get_attribute(
+                                                                    'src')
+                                                                print(f"- Product image URL: {product_image_url}")
+                                                            except TimeoutException:
+                                                                product_image_url = "/"
+                                                                print("- Timeout waiting for product image element to appear.")
+                                                            except NoSuchElementException:
+                                                                product_image_url = "/"
+                                                                print("- [404] Product image URL not found.")
+
+                                                            append_to_excel(file_path,
+                                                                            [oil_filter_name, article_number,
+                                                                             oil_filter_brand_name,
+                                                                             oil_filter_type,
+                                                                             oil_filter_height_mm,
+                                                                             oil_filter_construction_year_to,
+                                                                             oil_filter_construction_year_from,
+                                                                             oil_filter_thread_size,
+                                                                             oil_filter_diameter, oil_filter_diameter1,
+                                                                             oil_filter_diameter2,
+                                                                             oil_filter_seal_ring_outer_diameter,
+                                                                             oil_filter_gasket_inner_diameter,
+                                                                             oil_filter_inner_diameter,
+                                                                             oil_filter_inner_diameter2,
+                                                                             oil_filter_seal_diameter, engine_code,
+                                                                             oil_filter_engine_number_to, product_image_url,
+                                                                             brand_name, model_name, series_name, engine_name])
+                                                        else:
+                                                            print("ul_element not found.")
+
+                                                    except NoSuchElementException:
+                                                        print("No products found in the new listing.")
+                                                    except StaleElementReferenceException:
+                                                        print("StaleElementReferenceException: skipping this filter.")
+
+                                            # Nastavak izvršavanja
+                                            main_div = driver.find_element(By.XPATH,
+                                                                           './/div[contains(@class, "header-select__choosse-wrap")]')
+                                            selector_divs = main_div.find_elements(By.XPATH,
+                                                                                   './/div[contains(@class, "selector")]')
+                                            engine_selector_div = selector_divs[2]
+                                            select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
+                                            options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
+                                except StaleElementReferenceException:
+                                    print("StaleElementReferenceException. Next car...")
+                                    main_div = driver.find_element(By.XPATH,
+                                                                   './/div[contains(@class, "header-select__choosse-wrap")]')
+                                    selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
+                                    engine_selector_div = selector_divs[2]
+                                    select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
+                                    options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
+                                    continue
+                        try:
+                            # Ponovno pronalaženje serije nakon iteracije kroz motore
+                            main_div = driver.find_element(By.XPATH, './/div[contains(@class, "header-select__choosse-wrap")]')
+                            selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
+                            second_selector_div = selector_divs[1]
+                            select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
+                            models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
+                            if j < len(models):
+                                model = models[j]
+                                options_series = model.find_elements(By.TAG_NAME, 'option')
+                                print(f"PASSED: 'j' ({j}) is in the range for models list (length {len(models)})")
+                            else:
+                                print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
+                                screenshot_path = "/home/nikola/Projects/Local Projects/online-car-parts/error1.png"
+                                driver.save_screenshot(screenshot_path)
+                        except IndexError as e:
+                            try:
+                                print(f"IndexError: {e}")
+                                driver.refresh()
+                                sleep(5)
                                 main_div = driver.find_element(By.XPATH,
                                                                './/div[contains(@class, "header-select__choosse-wrap")]')
                                 selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
-                                engine_selector_div = selector_divs[2]
-                                select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
-                                options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
+                                second_selector_div = selector_divs[1]
+                                select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
+                                models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
+                                if j < len(models):
+                                    model = models[j]
+                                    options_series = model.find_elements(By.TAG_NAME, 'option')
+                                else:
+                                    print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
+                            except IndexError as e:
+                                print(f"IndexError: {e}")
+                                driver.refresh()
+                                sleep(5)
                                 continue
-                    try:
-                        # Ponovno pronalaženje serije nakon iteracije kroz motore
-                        main_div = driver.find_element(By.XPATH, './/div[contains(@class, "header-select__choosse-wrap")]')
-                        selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
-                        second_selector_div = selector_divs[1]
-                        select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
-                        models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
-                        if j < len(models):
-                            model = models[j]
-                            options_series = model.find_elements(By.TAG_NAME, 'option')
-                            print(f"PASSED: 'j' ({j}) is in the range for models list (length {len(models)})")
-                        else:
-                            print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
-                            screenshot_path = "/home/nikola/Projects/Local Projects/online-car-parts/error.png"
-                            driver.save_screenshot(screenshot_path)
-                    except IndexError as e:
-                        try:
-                            print(f"IndexError: {e}")
+                        except StaleElementReferenceException as e:
+                            print(f"StaleElementReferenceException: {e}")
+                            # Ponovo pronađite element i nastavite
                             driver.refresh()
                             sleep(5)
                             main_div = driver.find_element(By.XPATH,
@@ -704,27 +726,23 @@ def online_car_parts(driver, file_path):
                                 options_series = model.find_elements(By.TAG_NAME, 'option')
                             else:
                                 print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
-                        except IndexError as e:
-                            print(f"IndexError: {e}")
-                            driver.refresh()
-                            sleep(5)
-                            continue
-                    except StaleElementReferenceException as e:
-                        print(f"StaleElementReferenceException: {e}")
-                        # Ponovo pronađite element i nastavite
-                        driver.refresh()
-                        sleep(5)
-                        main_div = driver.find_element(By.XPATH,
-                                                       './/div[contains(@class, "header-select__choosse-wrap")]')
-                        selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
-                        second_selector_div = selector_divs[1]
-                        select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
-                        models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
-                        if j < len(models):
-                            model = models[j]
-                            options_series = model.find_elements(By.TAG_NAME, 'option')
-                        else:
-                            print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
+                except StaleElementReferenceException as e:
+                    print(f"StaleElementReferenceException: {e}")
+                    driver.refresh()
+                    sleep(5)
+                    main_div = driver.find_element(By.XPATH,
+                                                   './/div[contains(@class, "header-select__choosse-wrap")]')
+                    selector_divs = main_div.find_elements(By.XPATH, './/div[contains(@class, "selector")]')
+                    second_selector_div = selector_divs[1]
+                    select_element_model_and_series = second_selector_div.find_element(By.TAG_NAME, 'select')
+                    models = select_element_model_and_series.find_elements(By.XPATH, './/optgroup')
+                    if j < len(models):
+                        model = models[j]
+                        options_series = model.find_elements(By.TAG_NAME, 'option')
+                    else:
+                        print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
+                        screenshot_path = "/home/nikola/Projects/Local Projects/online-car-parts/error2.png"
+                        driver.save_screenshot(screenshot_path)
             print("---------------")
             workbook.save(file_path)
             print("Brand saved")
