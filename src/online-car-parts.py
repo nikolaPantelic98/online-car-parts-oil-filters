@@ -34,7 +34,7 @@ def setup_driver():
     # options.add_argument("--no-crash-upload")
     # options.add_argument("--disable-gpu")
     # options.add_argument("--disable-low-res-tiling")
-    # options.add_argument("--log-level-3")
+    # options.add_argument("--log-level-3") a
     # options.add_argument("--silent")
     options.add_argument("--page-load-strategy=none")
     options.add_argument("--blink-settings=imagesEnabled=false")
