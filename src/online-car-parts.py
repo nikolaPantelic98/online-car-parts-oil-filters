@@ -208,7 +208,7 @@ def online_car_parts(driver, file_path):
     # }
 
     desired_brands = {
-        "ABARTH"
+        "MITSUBISHI"
     }
 
     # Pronalaženje svih opcija unutar alphabetical_optgroup elementa
@@ -658,13 +658,27 @@ def online_car_parts(driver, file_path):
                                                         print("StaleElementReferenceException: skipping this filter.")
 
                                             # Nastavak izvršavanja
-                                            main_div = driver.find_element(By.XPATH,
-                                                                           './/div[contains(@class, "header-select__choosse-wrap")]')
-                                            selector_divs = main_div.find_elements(By.XPATH,
-                                                                                   './/div[contains(@class, "selector")]')
-                                            engine_selector_div = selector_divs[2]
-                                            select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
-                                            options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
+                                            try:
+                                                main_div = driver.find_element(By.XPATH,
+                                                                               './/div[contains(@class, "header-select__choosse-wrap")]')
+                                                selector_divs = main_div.find_elements(By.XPATH,
+                                                                                       './/div[contains(@class, "selector")]')
+                                                engine_selector_div = selector_divs[2]
+                                                select_element_engine = engine_selector_div.find_element(By.TAG_NAME, 'select')
+                                                options_engine = select_element_engine.find_elements(By.TAG_NAME, 'option')
+                                            except StaleElementReferenceException as e:
+                                                print(f"StaleElementReferenceException: {e}")
+                                                driver.refresh()
+                                                sleep(5)
+                                                main_div = driver.find_element(By.XPATH,
+                                                                               './/div[contains(@class, "header-select__choosse-wrap")]')
+                                                selector_divs = main_div.find_elements(By.XPATH,
+                                                                                       './/div[contains(@class, "selector")]')
+                                                engine_selector_div = selector_divs[2]
+                                                select_element_engine = engine_selector_div.find_element(By.TAG_NAME,
+                                                                                                         'select')
+                                                options_engine = select_element_engine.find_elements(By.TAG_NAME,
+                                                                                                     'option')
                                 except StaleElementReferenceException:
                                     print("StaleElementReferenceException. Next car...")
                                     main_div = driver.find_element(By.XPATH,
@@ -687,8 +701,8 @@ def online_car_parts(driver, file_path):
                                 print(f"PASSED: 'j' ({j}) is in the range for models list (length {len(models)})")
                             else:
                                 print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
-                                screenshot_path = "/home/nikola/Projects/Local Projects/online-car-parts/error1.png"
-                                driver.save_screenshot(screenshot_path)
+                                screenshot_path1 = "/home/nikola/Projects/Local Projects/online-car-parts/error1.png"
+                                driver.save_screenshot(screenshot_path1)
                         except IndexError as e:
                             try:
                                 print(f"IndexError: {e}")
@@ -741,8 +755,8 @@ def online_car_parts(driver, file_path):
                         options_series = model.find_elements(By.TAG_NAME, 'option')
                     else:
                         print(f"IndexError: 'j' ({j}) is out of range for models list (length {len(models)})")
-                        screenshot_path = "/home/nikola/Projects/Local Projects/online-car-parts/error2.png"
-                        driver.save_screenshot(screenshot_path)
+                        screenshot_path2 = "/home/nikola/Projects/Local Projects/online-car-parts/error2.png"
+                        driver.save_screenshot(screenshot_path2)
             print("---------------")
             workbook.save(file_path)
             print("Brand saved")
