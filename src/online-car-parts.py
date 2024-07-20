@@ -66,7 +66,7 @@ def initialize_excel(file_path):
     sheet = workbook.active
     headers = ["FILTER NAME", "FILTER_NUMBER", "FILTER BRAND", "FILTER TYPE", "HEIGHT (mm)", "CONSTRUCTION YEAR TO",
                "CONSTRUCTION YEAR FROM", "THREAD SIZE", "DIAMETER (mm)", "DIAMETER 1 (mm)", "DIAMETER 2 (mm)", "SEAL RING OUTER DIAMETER",
-               "GASKET INNER DIAMETER", "INNER DIAMETER (mm)", "INNER DIAMETER 2 (mm)", "SEAL DIAMETER (mm)", "ENGINE CODE", "ENGINE NUMBER TO", "OIL FILTER IMAGE", "CAR BRAND", "CAR MODEL",
+               "GASKET INNER DIAMETER", "INNER DIAMETER (mm)", "INNER DIAMETER 2 (mm)", "SEAL DIAMETER (mm)", "ENGINE CODE", "ENGINE NUMBER TO", "STATUS", "CAR BRAND", "CAR MODEL",
                "CAR SERIES AND YEAR", "CAR ENGINE"]
     sheet.append(headers)
     workbook.save(file_path)
@@ -208,7 +208,7 @@ def online_car_parts(driver, file_path):
     # }
 
     desired_brands = {
-        "MITSUBISHI"
+        "ALFA ROMEO"
     }
 
     # Pronalaženje svih opcija unutar alphabetical_optgroup elementa
@@ -340,7 +340,25 @@ def online_car_parts(driver, file_path):
                                             # Iteracija kroz sve brendove
                                             for brand in brands_to_search:
                                                 try:
-                                                    product_cards = driver.find_elements(By.XPATH, '//div[@class="product-card" and not(@data-recommended-products)]')
+                                                    # Pronađi sve `div` elemente unutar glavnog kontejnera
+                                                    listing_wrapper_divs = driver.find_elements(By.XPATH,
+                                                                                                '//div[@class="listing-wrapper"]/div')
+
+                                                    product_cards = []
+                                                    # Iteriraj kroz sve pronađene `div` elemente
+                                                    for div in listing_wrapper_divs:
+                                                        try:
+                                                            div_class = div.get_attribute("class")
+                                                            # Ako nađemo `title-recommendation` klasu, prekidamo petlju
+                                                            if "title-recommendation" in div_class:
+                                                                break
+                                                            # Ako `div` ima `product-card` klasu, dodaj ga u listu
+                                                            if "product-card" in div_class:
+                                                                product_cards.append(div)
+                                                        except StaleElementReferenceException:
+                                                            print(
+                                                                "StaleElementReferenceException: couldn't process a div element.")
+                                                            continue
                                                 except StaleElementReferenceException:
                                                     print(
                                                         "StaleElementReferenceException: product_cards couldn't be found.")
@@ -349,15 +367,16 @@ def online_car_parts(driver, file_path):
                                                 for card in product_cards:
                                                     try:
                                                         product_title = card.find_element(By.XPATH,
-                                                                                          './/div[@class="product-card__title"]/a').text
+                                                                                          './/div[@class="product-card__title"]//*[self::a or self::span]').text
+
                                                         if brand in product_title:
                                                             print(f"* {brand} found")
                                                             found_brands.append(brand)
                                                             product_main_divs.append(card)  # Čuvamo main div u listu
-                                                            break  # Nastavi sa sledećim brendom čim pronađe trenutni
+                                                            # break  # Nastavi sa sledećim brendom čim pronađe trenutni
                                                     except NoSuchElementException:
                                                         print(
-                                                            "NoSuchElementException. continue.")  # Nastavi sa sledećim elementom ako trenutni nije pronađen
+                                                            f"NoSuchElementException: no {brand} available. Continue.")  # Nastavi sa sledećim elementom ako trenutni nije pronađen
                                                     except StaleElementReferenceException:
                                                         print(
                                                             "StaleElementReferenceException: product_title couldn't be found.")
@@ -438,10 +457,10 @@ def online_car_parts(driver, file_path):
                                                                                                           './span[@class="right"]').text
                                                             print(f"- Filter type: {oil_filter_type}")
                                                         except NoSuchElementException:
-                                                            oil_filter_type = "/"
+                                                            oil_filter_type = ""
                                                             print("- [404] Filter type not found.")
                                                         except TimeoutException:
-                                                            oil_filter_type = "/"
+                                                            oil_filter_type = ""
                                                             print("- [404] Filter type not found.")
 
                                                         # desc_table_div = product_main_div.find_element(By.XPATH,
@@ -458,7 +477,7 @@ def online_car_parts(driver, file_path):
                                                                                                               './span[contains(@class, "right")]').text
                                                                 print(f"- Height [mm]: {oil_filter_height_mm}")
                                                             except NoSuchElementException:
-                                                                oil_filter_height_mm = "/"
+                                                                oil_filter_height_mm = ""
                                                                 print("- [404] Height [mm] not found.")
 
                                                             # construction Year to
@@ -470,7 +489,7 @@ def online_car_parts(driver, file_path):
                                                                 print(
                                                                     f"- Construction Year to: {oil_filter_construction_year_to}")
                                                             except NoSuchElementException:
-                                                                oil_filter_construction_year_to = "/"
+                                                                oil_filter_construction_year_to = ""
                                                                 print("- [404] Construction Year to not found.")
 
                                                             # construction Year from
@@ -482,7 +501,7 @@ def online_car_parts(driver, file_path):
                                                                 print(
                                                                     f"- Construction Year from: {oil_filter_construction_year_from}")
                                                             except NoSuchElementException:
-                                                                oil_filter_construction_year_from = "/"
+                                                                oil_filter_construction_year_from = ""
                                                                 print("- [404] Construction Year from not found.")
 
                                                             # thead size
@@ -493,7 +512,7 @@ def online_car_parts(driver, file_path):
                                                                                                                      './span[contains(@class, "right")]').text
                                                                 print(f"- Thread Size: {oil_filter_thread_size}")
                                                             except NoSuchElementException:
-                                                                oil_filter_thread_size = "/"
+                                                                oil_filter_thread_size = ""
                                                                 print("- [404] Thread Size not found.")
 
                                                             # diameter (mm)
@@ -504,7 +523,7 @@ def online_car_parts(driver, file_path):
                                                                                                                './span[contains(@class, "right")]').text
                                                                 print(f"- Diameter [mm]: {oil_filter_diameter}")
                                                             except NoSuchElementException:
-                                                                oil_filter_diameter = "/"
+                                                                oil_filter_diameter = ""
                                                                 print("- [404] Diameter [mm] not found.")
 
                                                             # diameter 1 [mm]
@@ -515,7 +534,7 @@ def online_car_parts(driver, file_path):
                                                                                                                 './span[contains(@class, "right")]').text
                                                                 print(f"- Diameter 1 [mm]: {oil_filter_diameter1}")
                                                             except NoSuchElementException:
-                                                                oil_filter_diameter1 = "/"
+                                                                oil_filter_diameter1 = ""
                                                                 print("- [404] Diameter 1 [mm] not found.")
 
                                                             # diameter 2 [mm]
@@ -526,7 +545,7 @@ def online_car_parts(driver, file_path):
                                                                                                                  './span[contains(@class, "right")]').text
                                                                 print(f"- Diameter 2 [mm]: {oil_filter_diameter2}")
                                                             except NoSuchElementException:
-                                                                oil_filter_diameter2 = "/"
+                                                                oil_filter_diameter2 = ""
                                                                 print("- [404] Diameter 2 [mm] not found.")
 
                                                             # Seal Ring Outer Diameter
@@ -538,7 +557,7 @@ def online_car_parts(driver, file_path):
                                                                 print(
                                                                     f"- Seal Ring Outer Diameter: {oil_filter_seal_ring_outer_diameter}")
                                                             except NoSuchElementException:
-                                                                oil_filter_seal_ring_outer_diameter = "/"
+                                                                oil_filter_seal_ring_outer_diameter = ""
                                                                 print("- [404] Seal Ring Outer Diameter not found.")
 
                                                             # Gasket inner diameter
@@ -550,7 +569,7 @@ def online_car_parts(driver, file_path):
                                                                 print(
                                                                     f"- Gasket inner diameter: {oil_filter_gasket_inner_diameter}")
                                                             except NoSuchElementException:
-                                                                oil_filter_gasket_inner_diameter = "/"
+                                                                oil_filter_gasket_inner_diameter = ""
                                                                 print("- [404] Gasket inner diameter not found.")
 
                                                             # Inner diameter
@@ -563,7 +582,7 @@ def online_car_parts(driver, file_path):
                                                                 print(
                                                                     f"- Inner diameter: {oil_filter_inner_diameter}")
                                                             except NoSuchElementException:
-                                                                oil_filter_inner_diameter = "/"
+                                                                oil_filter_inner_diameter = ""
                                                                 print("- [404] Inner diameter not found.")
 
                                                             # Inner diameter 2
@@ -576,7 +595,7 @@ def online_car_parts(driver, file_path):
                                                                 print(
                                                                     f"- Inner diameter 2: {oil_filter_inner_diameter2}")
                                                             except NoSuchElementException:
-                                                                oil_filter_inner_diameter2 = "/"
+                                                                oil_filter_inner_diameter2 = ""
                                                                 print("- [404] Inner diameter 2 not found.")
 
                                                             # engine code
@@ -587,7 +606,7 @@ def online_car_parts(driver, file_path):
                                                                                                           './span[contains(@class, "right")]').text
                                                                 print(f"- Engine Code: {engine_code}")
                                                             except NoSuchElementException:
-                                                                engine_code = "/"
+                                                                engine_code = ""
                                                                 print("- [404] Engine Code not found.")
 
                                                             # Seal diameter
@@ -600,7 +619,7 @@ def online_car_parts(driver, file_path):
                                                                 print(
                                                                     f"- Seal diameter: {oil_filter_seal_diameter}")
                                                             except NoSuchElementException:
-                                                                oil_filter_seal_diameter = "/"
+                                                                oil_filter_seal_diameter = ""
                                                                 print("- [404] Seal diameter not found.")
 
                                                             # engine number to
@@ -612,25 +631,20 @@ def online_car_parts(driver, file_path):
                                                                     './span[contains(@class, "right")]').text
                                                                 print(f"- Engine Number to: {oil_filter_engine_number_to}")
                                                             except NoSuchElementException:
-                                                                oil_filter_engine_number_to = "/"
+                                                                oil_filter_engine_number_to = ""
                                                                 print("- [404] Engine Number to to not found.")
 
-                                                            # Product image URL
                                                             try:
-                                                                product_image_div = WebDriverWait(product_main_div, 10).until(
-                                                                    EC.presence_of_element_located(
-                                                                        (By.XPATH, './/div[@class="product-card__image"]'))
+                                                                status_element = product_main_div.find_element(
+                                                                    By.XPATH,
+                                                                    './/div[contains(@class, "product-card__status")]'
                                                                 )
-                                                                product_image_url = product_image_div.find_element(By.TAG_NAME,
-                                                                                                                   'img').get_attribute(
-                                                                    'src')
-                                                                print(f"- Product image URL: {product_image_url}")
-                                                            except TimeoutException:
-                                                                product_image_url = "/"
-                                                                print("- Timeout waiting for product image element to appear.")
+                                                                status_text = status_element.text
+                                                                print(f"- Status: {status_text}")
                                                             except NoSuchElementException:
-                                                                product_image_url = "/"
-                                                                print("- [404] Product image URL not found.")
+                                                                status_text = ""
+                                                                print("- [404] Status element not found.")
+
 
                                                             append_to_excel(file_path,
                                                                             [oil_filter_name, article_number,
@@ -647,7 +661,7 @@ def online_car_parts(driver, file_path):
                                                                              oil_filter_inner_diameter,
                                                                              oil_filter_inner_diameter2,
                                                                              oil_filter_seal_diameter, engine_code,
-                                                                             oil_filter_engine_number_to, product_image_url,
+                                                                             oil_filter_engine_number_to, status_text,
                                                                              brand_name, model_name, series_name, engine_name])
                                                         else:
                                                             print("ul_element not found.")
